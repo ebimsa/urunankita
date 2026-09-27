@@ -1,0 +1,245 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ------------------------------------------------------
+// 1. PENGGUNA & AUTENTIKASI
+// ------------------------------------------------------
+
+enum GlobalRole {
+  USER
+  SUPERADMIN
+}
+
+model User {
+  id           String      @id @default(uuid())
+  email        String?     @unique
+  phone        String?     @unique
+  fullName     String
+  passwordHash String
+  avatarUrl    String?
+  role         GlobalRole  @default(USER)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  memberships      GroupMember[]
+  paymentsMade     Payment[]     @relation("PayerUser")
+  paymentsVerified Payment[]     @relation("VerifierUser")
+  auditLogs        AuditLog[]
+}
+
+// ------------------------------------------------------
+// 2. GRUP (KOMUNITAS / SPACE) & KONFIGURASI
+// ------------------------------------------------------
+
+enum GroupType {
+  PHYSICAL_UNIT // RT/RW, Kost, Perumahan (Berbasis Unit/Slot Fisik)
+  DIRECT_MEMBER // Futsal, Arisan, Kasual (Berbasis Anggota Langsung)
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model Group {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  type        GroupType  @default(DIRECT_MEMBER)
+  joinCode    String     @unique
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  members       GroupMember[]
+  units         GroupUnit[]
+  bills         Bill[]
+  cashLedgers   CashLedger[]
+  auditLogs     AuditLog[]
+  paymentConfig GroupPaymentConfig?
+}
+
+// Konfigurasi Pembayaran (QRIS Dinamis, Info Rekening Bank, Tunai)
+model GroupPaymentConfig {
+  id            String   @id @default(uuid())
+  groupId       String   @unique
+  group         Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // 1. QRIS Dinamis (dari modifikasi QRIS statis bendahara)
+  qrisEnabled   Boolean  @default(false)
+  rawQrString   String?  // String EMVCo dari QRIS Statis bendahara
+  merchantName  String?  // Nama yang tertera di QRIS
+
+  // 2. Info Rekening Bank / E-Wallet Manual
+  bankEnabled   Boolean  @default(false)
+  bankName      String?  // Misal: "BCA", "Mandiri", "BRI", "GoPay"
+  accountNumber String?  // No rekening atau no HP e-wallet
+  accountHolder String?  // Atas nama pemilik rekening
+
+  // 3. Bayar Tunai Langsung
+  cashEnabled   Boolean  @default(true)
+
+  instructions  String?  // Instruksi tambahan bagi pembayar
+  updatedAt     DateTime @updatedAt
+}
+
+model GroupMember {
+  id        String     @id @default(uuid())
+  groupId   String
+  group     Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      MemberRole @default(MEMBER)
+  isActive  Boolean    @default(true)
+  joinedAt  DateTime   @default(now())
+
+  // Jika grup bertipe PHYSICAL_UNIT, member bisa menempati satu unit/slot
+  unitId    String?
+  unit      GroupUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+
+  bills     Bill[]     @relation("DirectMemberBills")
+
+  @@unique([groupId, userId])
+}
+
+// Untuk Perumahan/Kost (Rumah Blok A-1, Kamar 03, dll)
+model GroupUnit {
+  id          String        @id @default(uuid())
+  groupId     String
+  group       Group         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  name        String        // Contoh: "Blok A-1" atau "Kamar 03"
+  description String?
+  createdAt   DateTime      @default(now())
+
+  occupants   GroupMember[]
+  bills       Bill[]        @relation("UnitBills")
+
+  @@unique([groupId, name])
+}
+
+// ------------------------------------------------------
+// 3. TAGIHAN (BILLING ENGINE)
+// ------------------------------------------------------
+
+enum BillStatus {
+  UNPAID
+  PENDING_VERIFICATION // Member sudah konfirmasi/upload bukti, menunggu admin
+  PAID
+  CANCELLED
+}
+
+model Bill {
+  id          String      @id @default(uuid())
+  groupId     String
+  group       Group       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  title       String      // Contoh: "Iuran Keamanan & Sampah - Oktober 2026"
+  period      String?     // Format: "2026-10"
+  dueDate     DateTime?
+  status      BillStatus  @default(UNPAID)
+  totalAmount Int         // Nominal tagihan pokok (Rupiah)
+
+  // Target tagihan (Salah satu tergantung GroupType)
+  unitId      String?
+  unit        GroupUnit?  @relation("UnitBills", fields: [unitId], references: [id], onDelete: SetNull)
+
+  memberId    String?
+  member      GroupMember? @relation("DirectMemberBills", fields: [memberId], references: [id], onDelete: SetNull)
+
+  items       BillItem[]
+  payments    Payment[]
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model BillItem {
+  id      String @id @default(uuid())
+  billId  String
+  bill    Bill   @relation(fields: [billId], references: [id], onDelete: Cascade)
+  name    String // Komponen biaya, contoh: "Biaya Satpam", "Biaya Kebersihan"
+  amount  Int
+}
+
+// ------------------------------------------------------
+// 4. PEMBAYARAN & KONFIRMASI (QRIS / TRANSFER / TUNAI)
+// ------------------------------------------------------
+
+enum PaymentMethod {
+  QRIS_DYNAMIC
+  BANK_TRANSFER_MANUAL
+  CASH_MANUAL
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  REJECTED
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  billId        String
+  bill          Bill          @relation(fields: [billId], references: [id], onDelete: Cascade)
+  payerId       String
+  payer         User          @relation("PayerUser", fields: [payerId], references: [id])
+  
+  method        PaymentMethod @default(QRIS_DYNAMIC)
+  nominalOrigin Int           // Nominal pokok tagihan (misal: 100.000)
+  uniqueCode    Int           @default(0) // 3 digit kode unik (misal: 142)
+  totalPaid     Int           // Total yang harus ditransfer (nominalOrigin + uniqueCode)
+  
+  proofImageUrl String?       // Foto/screenshot bukti transfer
+  status        PaymentStatus @default(PENDING)
+  notes         String?
+
+  verifiedById  String?
+  verifiedBy    User?         @relation("VerifierUser", fields: [verifiedById], references: [id])
+  verifiedAt    DateTime?
+
+  cashLedger    CashLedger?   // Otomatis tercatat di buku kas jika berstatus SUCCESS
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+// ------------------------------------------------------
+// 5. BUKU KAS KOMUNITAS & AUDIT TRAIL
+// ------------------------------------------------------
+
+enum CashFlowType {
+  INCOME  // Uang Masuk
+  EXPENSE // Uang Keluar
+}
+
+model CashLedger {
+  id          String       @id @default(uuid())
+  groupId     String
+  group       Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  type        CashFlowType
+  amount      Int
+  category    String       // "Iuran Warga", "Operasional", "Perbaikan", dll.
+  description String
+  receiptUrl  String?      // Kwitansi / bukti belanja pengeluaran
+
+  paymentId   String?      @unique
+  payment     Payment?     @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  entryDate   DateTime     @default(now())
+  createdAt   DateTime     @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String   // Misal: "CONFIRM_PAYMENT", "UPDATE_BILL", "CHANGE_ROLE"
+  details   Json
+  timestamp DateTime @default(now())
+}

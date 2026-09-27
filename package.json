@@ -1,0 +1,29 @@
+{
+  "name": "eyuran-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "eYuran - Multi-tenant Community Billing & Bookkeeping Engine",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm run start:dev --workspace=@eyuran/backend",
+    "dev:frontend": "npm run dev --workspace=@eyuran/frontend",
+    "build:backend": "npm run build --workspace=@eyuran/backend",
+    "build:frontend": "npm run build --workspace=@eyuran/frontend",
+    "prisma:generate": "npm run prisma:generate --workspace=@eyuran/backend",
+    "prisma:migrate": "npm run prisma:migrate --workspace=@eyuran/backend"
+  },
+  "keywords": [
+    "billing",
+    "qris",
+    "community",
+    "monorepo",
+    "nestjs",
+    "nuxt3",
+    "prisma"
+  ],
+  "author": "",
+  "license": "MIT"
+}
