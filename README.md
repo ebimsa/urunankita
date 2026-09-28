@@ -1,37 +1,37 @@
-# 💰 eYuran — Multi-tenant Community Billing & Bookkeeping Engine
+# eYuran - Multi-tenant Community Billing & Bookkeeping Engine
 
-**eYuran** adalah platform SaaS pencatatan, penagihan, dan transparansi iuran komunitas mandiri. Dirancang untuk menangani kelompok formal (perumahan, RT/RW, kost) maupun kelompok kasual (futsal, arisan, komunitas hobi).
+eYuran adalah platform SaaS pencatatan, penagihan, dan transparansi iuran komunitas mandiri. Dirancang untuk menangani kelompok formal (perumahan, RT/RW, kost) maupun kelompok kasual (futsal, arisan, komunitas hobi).
 
 ---
 
-## 🏗️ Tech Stack & Architecture
+## Tech Stack & Arsitektur
 
-Sistem ini dibangun dengan arsitektur **Monorepo** modern menggunakan npm workspaces:
+Sistem ini dibangun dengan arsitektur Monorepo menggunakan npm workspaces:
 
 | Komponen | Teknologi | Keterangan |
 |---|---|---|
-| **Backend** | [NestJS](https://nestjs.com/) (TypeScript) | Enterprise-grade, modular, strict architecture (Modules, Guards, DTOs) |
-| **Database & ORM** | PostgreSQL + [Prisma ORM](https://www.prisma.io/) | Type-safe schema, relational integrity, migrations |
-| **Frontend** | [Nuxt 3](https://nuxt.com/) (Vue 3) + Tailwind CSS | Reactive Composition API, auto-imports, high-speed DX |
-| **Payment Flow** | P2P QRIS Dinamis & Rekening Bank Manual | Zero platform fee, zero escrow, langsung ke rekening/e-wallet Bendahara |
+| Backend | NestJS (TypeScript) | Arsitektur modular, DTO validation, Guards, dan Dependency Injection |
+| Database & ORM | PostgreSQL + Prisma ORM | Type-safe schema, relational integrity, dan migrasi otomatis |
+| Frontend | Nuxt 3 (Vue 3) + Tailwind CSS | Composition API, auto-imports, dan antarmuka responsif |
+| Alur Pembayaran | P2P QRIS Dinamis & Rekening Bank Manual | Tanpa biaya platform, tanpa penampungan dana, dana langsung ke pengurus |
 
 ---
 
-## 🌟 Pilar Fitur Utama
+## Pilar Fitur Utama
 
-1. **Dua Mode Struktur Grup:**
-   - **Mode Unit Fisik (`PHYSICAL_UNIT`):** Cocok untuk RT/RW atau Kost. Tagihan dialokasikan ke Unit (contoh: *Rumah Blok A-1* atau *Kamar 03*). Riwayat tagihan tetap tersimpan di unit meski penghuni berganti.
-   - **Mode Anggota Langsung (`DIRECT_MEMBER`):** Cocok untuk komunitas olahraga/kasual. Tagihan langsung ditujukan ke akun masing-masing individu.
-2. **Mesin Penagihan & QRIS Dinamis (P2P):**
-   - Bendahara cukup memasukkan QRIS statis / nomor rekening mereka sekali.
-   - Sistem memodifikasi payload QRIS secara dinamis dengan menambahkan **nominal tagihan + 3 digit kode unik** untuk mempermudah pengecekan mutasi bank.
-3. **Pembukuan & Transparansi Terbuka:**
-   - Rekap arus kas masuk (iuran) dan keluar (operasional) dapat dipantau seluruh anggota secara transparan.
-   - **Audit Trail** otomatis untuk setiap aksi sensitif (konfirmasi manual, perubahan tagihan).
+1. Dua Mode Struktur Grup:
+   - Mode Unit Fisik (PHYSICAL_UNIT): Cocok untuk RT/RW atau Kost. Tagihan dialokasikan ke Unit (contoh: Rumah Blok A-1 atau Kamar 03). Riwayat tagihan tetap tersimpan di unit meski penghuni berganti.
+   - Mode Anggota Langsung (DIRECT_MEMBER): Cocok untuk komunitas olahraga atau kasual. Tagihan langsung ditujukan ke akun masing-masing individu.
+2. Mesin Penagihan & QRIS Dinamis (P2P):
+   - Pengurus memasukkan data QRIS statis atau nomor rekening bank.
+   - Sistem memodifikasi payload QRIS secara dinamis dengan menambahkan nominal tagihan dan 3 digit kode unik untuk verifikasi mutasi bank.
+3. Pembukuan & Transparansi:
+   - Rekap arus kas masuk (iuran) dan keluar (operasional) dapat dipantau seluruh anggota secara terbuka.
+   - Audit trail otomatis mencatat setiap tindakan sensitif seperti konfirmasi pembayaran manual dan perubahan tagihan.
 
 ---
 
-## 📁 Struktur Direktori
+## Struktur Direktori
 
 ```text
 eYuran/
@@ -49,7 +49,7 @@ eYuran/
 
 ---
 
-## 🚀 Panduan Menjalankan Proyek
+## Panduan Menjalankan Proyek
 
 ### 1. Install Dependensi
 ```bash
@@ -61,10 +61,14 @@ Salin konfigurasi environment di backend:
 ```bash
 cp apps/backend/.env.example apps/backend/.env
 ```
-Sesuaikan `DATABASE_URL` di `apps/backend/.env` dengan koneksi PostgreSQL lokal/Supabase Anda, lalu jalankan migrasi:
+
+Sesuaikan `DATABASE_URL` di `apps/backend/.env` dengan koneksi PostgreSQL Anda, lalu jalankan pembuatan client:
 ```bash
 npm run prisma:generate
-# atau untuk migrasi ke database riil:
+```
+
+Untuk menjalankan migrasi ke database:
+```bash
 npm run prisma:migrate
 ```
 

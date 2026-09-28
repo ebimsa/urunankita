@@ -48,6 +48,12 @@ enum MemberRole {
   MEMBER
 }
 
+enum MembershipStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Group {
   id          String     @id @default(uuid())
   name        String
@@ -71,16 +77,18 @@ model GroupPaymentConfig {
   groupId       String   @unique
   group         Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  // 1. QRIS Dinamis (dari modifikasi QRIS statis bendahara)
+  // 1. QRIS (Gambar atau Dinamis)
   qrisEnabled   Boolean  @default(false)
+  qrisImageUrl  String?  // Gambar QRIS (Base64 data URL atau URL gambar)
   rawQrString   String?  // String EMVCo dari QRIS Statis bendahara
   merchantName  String?  // Nama yang tertera di QRIS
 
   // 2. Info Rekening Bank / E-Wallet Manual
-  bankEnabled   Boolean  @default(false)
-  bankName      String?  // Misal: "BCA", "Mandiri", "BRI", "GoPay"
-  accountNumber String?  // No rekening atau no HP e-wallet
-  accountHolder String?  // Atas nama pemilik rekening
+  bankEnabled    Boolean  @default(false)
+  bankName       String?  // Misal: "BCA", "Mandiri", "BRI", "GoPay"
+  accountNumber  String?  // No rekening atau no HP e-wallet
+  accountHolder  String?  // Atas nama pemilik rekening
+  accountDetails String?  // Teks keterangan rekening bebas / panduan transfer
 
   // 3. Bayar Tunai Langsung
   cashEnabled   Boolean  @default(true)
@@ -90,14 +98,15 @@ model GroupPaymentConfig {
 }
 
 model GroupMember {
-  id        String     @id @default(uuid())
+  id        String           @id @default(uuid())
   groupId   String
-  group     Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group     Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
   userId    String
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role      MemberRole @default(MEMBER)
-  isActive  Boolean    @default(true)
-  joinedAt  DateTime   @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      MemberRole       @default(MEMBER)
+  status    MembershipStatus @default(APPROVED)
+  isActive  Boolean          @default(true)
+  joinedAt  DateTime         @default(now())
 
   // Jika grup bertipe PHYSICAL_UNIT, member bisa menempati satu unit/slot
   unitId    String?
@@ -190,9 +199,7 @@ model Payment {
   payer         User          @relation("PayerUser", fields: [payerId], references: [id])
   
   method        PaymentMethod @default(QRIS_DYNAMIC)
-  nominalOrigin Int           // Nominal pokok tagihan (misal: 100.000)
-  uniqueCode    Int           @default(0) // 3 digit kode unik (misal: 142)
-  totalPaid     Int           // Total yang harus ditransfer (nominalOrigin + uniqueCode)
+  amount        Int           // Nominal pembayaran (Rupiah)
   
   proofImageUrl String?       // Foto/screenshot bukti transfer
   status        PaymentStatus @default(PENDING)
