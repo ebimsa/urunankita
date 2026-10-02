@@ -1,12 +1,12 @@
-# eYuran - UI Design System & Guidelines (Neumorphism / Soft UI)
+# urunankita - UI Design System & Guidelines (Neumorphism / Soft UI)
 
-Dokumen ini merupakan panduan resmi sistem desain antarmuka (**UI Design System**) untuk platform **eYuran**. Semua komponen baru (Dashboard, Form, Modal, Halaman Login, dll.) wajib mengikuti panduan ini agar pengalaman pengguna tetap konsisten, taktil, dan profesional.
+Dokumen ini merupakan panduan resmi sistem desain antarmuka (**UI Design System**) untuk platform **urunankita**. Semua komponen baru (Dashboard, Form, Modal, Halaman Login, dll.) wajib mengikuti panduan ini agar pengalaman pengguna tetap konsisten, taktil, dan profesional.
 
 ---
 
 ## 1. Filosofi & Konsep Desain
 
-eYuran mengadopsi gaya **Neumorphism (Soft UI)** yang dipadukan dengan prinsip minimalis modern:
+urunankita mengadopsi gaya **Neumorphism (Soft UI)** yang dipadukan dengan prinsip minimalis modern:
 - **Taktil & Tiga Dimensi**: Elemen antarmuka tampak seperti muncul dari permukaan latar (*extruded*) atau tenggelam (*inset/debossed*).
 - **Cahaya Realistis**: Menggunakan *dual-shadows* yang konsisten (highlight putih di sudut kiri atas dan bayangan lembut abu-kebiruan di kanan bawah).
 - **Tanpa Garis Tepi Hitam Kaku**: Tidak menggunakan garis tepi tegas ala *neo-brutalism* (`border-2 border-slate-900` ditiadakan). Batas elemen dibentuk oleh bayangan lembut dan sudut membulat (*smooth rounded corners*).
@@ -16,7 +16,7 @@ eYuran mengadopsi gaya **Neumorphism (Soft UI)** yang dipadukan dengan prinsip m
 
 ## 2. Palet Warna (Color Tokens)
 
-Warna merek asli eYuran dipertahankan secara utuh dan dipadukan dengan kanvas *light blue-gray*:
+Warna merek asli urunankita dipertahankan secara utuh dan dipadukan dengan kanvas *light blue-gray*:
 
 | Token | Warna | Nilai Hex | Peruntukan Utama |
 |---|---|---|---|
@@ -135,4 +135,4 @@ Digunakan untuk kolom input, bilah pencarian, tab yang sedang aktif, dan sumur d
 
 ---
 
-*Terakhir diperbarui: 27 September 2026 — Tim Pengembang eYuran*
+*Terakhir diperbarui: 27 September 2026 — Tim Pengembang urunankita*

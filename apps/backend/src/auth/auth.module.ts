@@ -13,7 +13,7 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') ?? 'super-secret-jwt-key-eyuran-community-2026',
+        secret: configService.get<string>('JWT_SECRET') ?? 'super-secret-jwt-key-urunankita-community-2026',
         signOptions: {
           expiresIn: (configService.get<string>('JWT_EXPIRES_IN') ?? '7d') as any,
         },

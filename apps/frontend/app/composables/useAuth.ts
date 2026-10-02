@@ -17,13 +17,13 @@ export const useAuth = () => {
   const config = useRuntimeConfig()
   const apiBase = config.public.apiBase || 'http://localhost:3001'
 
-  const token = useCookie<string | null>('eyuran_jwt_token', {
+  const token = useCookie<string | null>('urunankita_jwt_token', {
     maxAge: 60 * 60 * 24 * 7, // 7 hari
     path: '/',
     sameSite: 'lax',
   })
 
-  const user = useState<User | null>('eyuran_auth_user', () => null)
+  const user = useState<User | null>('urunankita_auth_user', () => null)
   const loading = ref(false)
   const error = ref<string | null>(null)
 

@@ -3,7 +3,6 @@ import {
   ExecutionContext,
   ForbiddenException,
   Injectable,
-  NotFoundException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { MemberRole } from '@prisma/client';

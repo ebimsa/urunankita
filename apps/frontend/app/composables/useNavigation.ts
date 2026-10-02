@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-export type NavTab = 'DASHBOARD' | 'LEDGER' | 'MEMBERS'
+export type NavTab = 'DASHBOARD' | 'LEDGER' | 'MEMBERS' | 'UNITS'
 
 const activeTab = ref<NavTab>('DASHBOARD')
 

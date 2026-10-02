@@ -85,10 +85,10 @@ export const useGroups = () => {
   const apiBase = config.public.apiBase || 'http://localhost:3001'
   const { token } = useAuth()
 
-  const myGroups = useState<GroupMembership[]>('eyuran_my_groups', () => [])
-  const isCreateModalOpen = useState<boolean>('eyuran_modal_create_group', () => false)
-  const isJoinModalOpen = useState<boolean>('eyuran_modal_join_group', () => false)
-  const isBillModalOpen = useState<boolean>('eyuran_modal_bill', () => false)
+  const myGroups = useState<GroupMembership[]>('urunankita_my_groups', () => [])
+  const isCreateModalOpen = useState<boolean>('urunankita_modal_create_group', () => false)
+  const isJoinModalOpen = useState<boolean>('urunankita_modal_join_group', () => false)
+  const isBillModalOpen = useState<boolean>('urunankita_modal_bill', () => false)
 
   const openCreateModal = () => {
     isCreateModalOpen.value = true
@@ -310,6 +310,64 @@ export const useGroups = () => {
     }
   }
 
+  const createUnit = async (
+    groupId: string,
+    payload: { name: string; description?: string }
+  ) => {
+    if (!token.value) throw new Error('Harap login terlebih dahulu')
+
+    try {
+      return await $fetch<any>(`${apiBase}/groups/${groupId}/units`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token.value}`,
+          'Content-Type': 'application/json',
+        },
+        body: payload,
+      })
+    } catch (err: any) {
+      const msg = err?.data?.message || err?.message || 'Gagal menambahkan unit'
+      throw new Error(Array.isArray(msg) ? msg.join(', ') : msg)
+    }
+  }
+
+  const createUnitsBulk = async (
+    groupId: string,
+    payload: { names: string[] }
+  ) => {
+    if (!token.value) throw new Error('Harap login terlebih dahulu')
+
+    try {
+      return await $fetch<any>(`${apiBase}/groups/${groupId}/units/bulk`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token.value}`,
+          'Content-Type': 'application/json',
+        },
+        body: payload,
+      })
+    } catch (err: any) {
+      const msg = err?.data?.message || err?.message || 'Gagal menambahkan unit sekaligus'
+      throw new Error(Array.isArray(msg) ? msg.join(', ') : msg)
+    }
+  }
+
+  const deleteUnit = async (groupId: string, unitId: string) => {
+    if (!token.value) throw new Error('Harap login terlebih dahulu')
+
+    try {
+      return await $fetch<any>(`${apiBase}/groups/${groupId}/units/${unitId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token.value}`,
+        },
+      })
+    } catch (err: any) {
+      const msg = err?.data?.message || err?.message || 'Gagal menghapus unit'
+      throw new Error(Array.isArray(msg) ? msg.join(', ') : msg)
+    }
+  }
+
   const getGroupMembers = async (groupId: string) => {
     if (!token.value) return []
 
@@ -353,6 +411,44 @@ export const useGroups = () => {
       })
     } catch (err: any) {
       const msg = err?.data?.message || err?.message || 'Gagal menolak anggota'
+      throw new Error(Array.isArray(msg) ? msg.join(', ') : msg)
+    }
+  }
+
+  const updateMemberRole = async (
+    groupId: string,
+    memberId: string,
+    role: 'ADMIN' | 'MEMBER'
+  ) => {
+    if (!token.value) throw new Error('Harap login terlebih dahulu')
+
+    try {
+      return await $fetch<any>(`${apiBase}/groups/${groupId}/members/${memberId}/role`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token.value}`,
+          'Content-Type': 'application/json',
+        },
+        body: { role },
+      })
+    } catch (err: any) {
+      const msg = err?.data?.message || err?.message || 'Gagal memperbarui peran anggota'
+      throw new Error(Array.isArray(msg) ? msg.join(', ') : msg)
+    }
+  }
+
+  const removeMember = async (groupId: string, memberId: string) => {
+    if (!token.value) throw new Error('Harap login terlebih dahulu')
+
+    try {
+      return await $fetch<any>(`${apiBase}/groups/${groupId}/members/${memberId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token.value}`,
+        },
+      })
+    } catch (err: any) {
+      const msg = err?.data?.message || err?.message || 'Gagal mengeluarkan anggota'
       throw new Error(Array.isArray(msg) ? msg.join(', ') : msg)
     }
   }
@@ -511,6 +607,31 @@ export const useGroups = () => {
     }
   }
 
+  const getAuditLogs = async (groupId: string, limit = 50) => {
+    if (!token.value) return []
+
+    try {
+      return await $fetch<any[]>(`${apiBase}/groups/${groupId}/audit-logs`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token.value}`,
+        },
+        query: { limit },
+      })
+    } catch (err: any) {
+      return []
+    }
+  }
+
+  const leaveGroup = async (groupId: string) => {
+    return await $fetch(`${apiBase}/groups/${groupId}/leave`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token.value}`,
+      },
+    })
+  }
+
   return {
     myGroups,
     loading,
@@ -528,12 +649,18 @@ export const useGroups = () => {
     createGroup,
     previewGroup,
     joinGroup,
+    leaveGroup,
     getGroupLedger,
     getMyBills,
     getGroupBills,
     createBill,
     getGroupUnits,
+    createUnit,
+    createUnitsBulk,
+    deleteUnit,
     getGroupMembers,
+    updateMemberRole,
+    removeMember,
     recordLedgerExpense,
     recordLedgerIncome,
     deleteLedgerEntry,
@@ -544,5 +671,6 @@ export const useGroups = () => {
     verifyPayment,
     approveGroupMember,
     rejectGroupMember,
+    getAuditLogs,
   }
 }

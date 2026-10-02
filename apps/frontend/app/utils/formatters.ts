@@ -21,3 +21,10 @@ export const formatDate = (dateStr: string | undefined | null): string => {
     return dateStr
   }
 }
+
+export const formatNumberWithDots = (val: number | string | null | undefined): string => {
+  if (val === null || val === undefined || val === '') return ''
+  const numStr = val.toString().replace(/\D/g, '')
+  if (!numStr) return ''
+  return new Intl.NumberFormat('id-ID').format(Number(numStr))
+}

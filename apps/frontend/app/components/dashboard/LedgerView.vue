@@ -34,6 +34,37 @@ const filteredLedgerEntries = computed(() => {
     return matchesType && matchesQuery
   })
 })
+
+const exportLedgerCsv = () => {
+  const entries = filteredLedgerEntries.value
+  if (!entries || entries.length === 0) {
+    alert('Tidak ada data transaksi kas untuk diekspor.')
+    return
+  }
+
+  const groupName = props.activeMembership?.group?.name || 'Komunitas'
+  const header = ['Tanggal', 'Tipe', 'Kategori', 'Keterangan', 'Nominal (Rp)', 'Dicatat Oleh']
+  const rows = entries.map((e: any) => [
+    formatDate(e.entryDate || e.createdAt),
+    e.type === 'INCOME' ? 'Pemasukan (+)' : 'Pengeluaran (-)',
+    `"${(e.category || '').replace(/"/g, '""')}"`,
+    `"${(e.description || '').replace(/"/g, '""')}"`,
+    e.amount,
+    `"${(e.createdBy?.fullName || '-').replace(/"/g, '""')}"`,
+  ])
+
+  const csvContent = '\uFEFF' + [header.join(','), ...rows.map((r) => r.join(','))].join('\r\n')
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  const dateStr = new Date().toISOString().slice(0, 10)
+  a.href = url
+  a.download = `Buku_Kas_${groupName.replace(/[^a-zA-Z0-9]/g, '_')}_${dateStr}.csv`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
 </script>
 
 <template>
@@ -59,27 +90,42 @@ const filteredLedgerEntries = computed(() => {
         </p>
       </div>
 
-      <div v-if="isPengurus" class="flex items-center space-x-2.5 flex-wrap">
+      <div class="flex items-center space-x-2.5 flex-wrap">
+        <!-- Tombol Ekspor CSV -->
         <button
           type="button"
-          @click="$emit('openCreateRecord', 'EXPENSE')"
-          class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#e87b38] to-[#ce6326] text-white text-xs font-black shadow-[3px_3px_8px_rgba(227,116,52,0.35)] active:scale-95 transition-all flex items-center space-x-1.5 hover:brightness-105 cursor-pointer"
+          @click="exportLedgerCsv"
+          class="px-3.5 py-2.5 rounded-2xl bg-[#eaf0f7] text-[#007979] text-xs font-black shadow-[3px_3px_8px_#cad5e2,-3px_-3px_8px_#ffffff] active:shadow-[inset_1px_1px_3px_#cad5e2] hover:bg-white/60 transition-all flex items-center space-x-1.5 cursor-pointer"
+          title="Ekspor laporan buku kas ke format CSV (Excel)"
         >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <span>+ Catat Pengeluaran</span>
+          <span>Ekspor CSV</span>
         </button>
-        <button
-          type="button"
-          @click="$emit('openCreateRecord', 'INCOME')"
-          class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#007979] to-[#005a5a] text-white text-xs font-black shadow-[3px_3px_8px_rgba(0,121,121,0.35)] active:scale-95 transition-all flex items-center space-x-1.5 hover:brightness-105 cursor-pointer"
-        >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-          </svg>
-          <span>+ Catat Pemasukan</span>
-        </button>
+
+        <template v-if="isPengurus">
+          <button
+            type="button"
+            @click="$emit('openCreateRecord', 'EXPENSE')"
+            class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#e87b38] to-[#ce6326] text-white text-xs font-black shadow-[3px_3px_8px_rgba(227,116,52,0.35)] active:scale-95 transition-all flex items-center space-x-1.5 hover:brightness-105 cursor-pointer"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>+ Catat Pengeluaran</span>
+          </button>
+          <button
+            type="button"
+            @click="$emit('openCreateRecord', 'INCOME')"
+            class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#007979] to-[#005a5a] text-white text-xs font-black shadow-[3px_3px_8px_rgba(0,121,121,0.35)] active:scale-95 transition-all flex items-center space-x-1.5 hover:brightness-105 cursor-pointer"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>+ Catat Pemasukan</span>
+          </button>
+        </template>
       </div>
     </div>
 
@@ -184,8 +230,9 @@ const filteredLedgerEntries = computed(() => {
       </div>
     </div>
 
-    <!-- Daftar Mutasi Kas Lengkap -->
-    <div class="rounded-3xl bg-[#eaf0f7] shadow-[8px_8px_18px_#cad5e2,-8px_-8px_18px_#ffffff] border border-white/80 p-5 sm:p-6 space-y-3">
+    <!-- Tabel Mutasi Kas Terbuka -->
+    <div class="rounded-3xl bg-[#eaf0f7] shadow-[8px_8px_18px_#cad5e2,-8px_-8px_18px_#ffffff] border border-white/80 p-4 sm:p-6 overflow-hidden">
+      <!-- State Kosong -->
       <div v-if="filteredLedgerEntries.length === 0" class="p-12 text-center text-slate-500 font-medium text-xs space-y-3">
         <div class="w-12 h-12 rounded-2xl bg-white shadow-inner flex items-center justify-center mx-auto text-slate-400">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -196,58 +243,93 @@ const filteredLedgerEntries = computed(() => {
         <p v-else>Belum ada catatan mutasi kas grup. Pengurus dapat mencatat pengeluaran atau pemasukan baru melalui tombol di atas.</p>
       </div>
 
-      <div v-else class="space-y-3">
-        <div
-          v-for="entry in filteredLedgerEntries"
-          :key="entry.id"
-          class="p-4 sm:p-5 rounded-2xl bg-[#eaf0f7] shadow-[4px_4px_10px_#cad5e2,-4px_-4px_10px_#ffffff] border border-white/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:-translate-y-0.5 transition-all"
-        >
-          <div class="min-w-0 flex-1 space-y-1.5">
-            <div class="flex items-center space-x-2 flex-wrap gap-y-1">
-              <span
-                class="px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase text-white shadow-[1px_1px_3px_rgba(0,0,0,0.15)]"
-                :class="entry.type === 'INCOME' ? 'bg-[#007979]' : 'bg-[#E37434]'"
-              >
-                {{ entry.type === 'INCOME' ? 'Pemasukan' : 'Pengeluaran' }}
-              </span>
-              <span class="px-2 py-0.5 rounded-lg text-[11px] font-bold bg-[#eaf0f7] shadow-[inset_1.5px_1.5px_3px_#cad5e2,inset_-1.5px_-1.5px_3px_#ffffff] text-slate-700">
-                {{ entry.category }}
-              </span>
-              <span class="text-[11px] text-slate-500 font-medium">
+      <!-- Tabel Responsif -->
+      <div v-else class="overflow-x-auto -mx-4 sm:mx-0">
+        <table class="w-full text-left border-collapse min-w-[680px]">
+          <thead>
+            <tr class="border-b border-slate-200/80 text-[11px] font-black uppercase tracking-wider text-slate-400">
+              <th scope="col" class="py-3 px-4">Tanggal</th>
+              <th scope="col" class="py-3 px-4">Tipe</th>
+              <th scope="col" class="py-3 px-4">Kategori</th>
+              <th scope="col" class="py-3 px-4">Uraian / Keterangan</th>
+              <th scope="col" class="py-3 px-4 text-right">Nominal</th>
+              <th v-if="isPengurus" scope="col" class="py-3 px-4 text-center w-16">Aksi</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200/60 text-xs font-semibold text-slate-700">
+            <tr
+              v-for="entry in filteredLedgerEntries"
+              :key="entry.id"
+              class="hover:bg-white/40 transition-colors group"
+            >
+              <!-- Tanggal -->
+              <td class="py-3.5 px-4 whitespace-nowrap text-slate-500 font-medium">
                 {{ formatDate(entry.entryDate || entry.createdAt) }}
-              </span>
-            </div>
+              </td>
 
-            <p class="text-sm font-bold text-slate-800 break-words">
-              {{ entry.description }}
-            </p>
+              <!-- Tipe -->
+              <td class="py-3.5 px-4 whitespace-nowrap">
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase text-white shadow-xs"
+                  :class="entry.type === 'INCOME' ? 'bg-[#007979]' : 'bg-[#E37434]'"
+                >
+                  {{ entry.type === 'INCOME' ? 'Masuk (+)' : 'Keluar (-)' }}
+                </span>
+              </td>
 
-            <div v-if="entry.payment" class="text-[11px] text-slate-500 font-medium flex items-center space-x-1.5">
-              <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              <span>Otomatis dari pembayaran iuran warga</span>
-              <span v-if="entry.payment?.bill?.unit">({{ entry.payment.bill.unit.name }})</span>
-            </div>
-          </div>
+              <!-- Kategori -->
+              <td class="py-3.5 px-4 whitespace-nowrap">
+                <span class="inline-block px-2 py-0.5 rounded-lg bg-[#eaf0f7] shadow-[inset_1px_1px_2px_#cad5e2,inset_-1px_-1px_2px_#ffffff] text-slate-700 text-[11px] font-bold">
+                  {{ entry.category }}
+                </span>
+              </td>
 
-          <div class="flex items-center justify-between sm:justify-end space-x-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
-            <div
-              class="font-black text-base sm:text-lg whitespace-nowrap"
-              :class="entry.type === 'INCOME' ? 'text-[#007979]' : 'text-[#E37434]'"
-            >
-              {{ entry.type === 'INCOME' ? '+' : '-' }} {{ formatRupiah(entry.amount) }}
-            </div>
+              <!-- Uraian / Keterangan -->
+              <td class="py-3.5 px-4">
+                <div class="font-bold text-slate-800">
+                  {{ entry.description }}
+                </div>
+                <div v-if="entry.payment" class="text-[10px] text-slate-400 font-medium flex items-center space-x-1 mt-0.5">
+                  <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                  <span>Otomatis dari pembayaran iuran warga</span>
+                  <span v-if="entry.payment?.bill?.unit" class="text-slate-600 font-bold">({{ entry.payment.bill.unit.name }})</span>
+                </div>
+                <a
+                  v-if="entry.receiptUrl"
+                  :href="entry.receiptUrl"
+                  target="_blank"
+                  class="inline-flex items-center space-x-1 text-[10px] text-[#007979] hover:underline font-bold mt-0.5"
+                >
+                  <span>Lihat Bukti/Struk</span>
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </td>
 
-            <button
-              v-if="isPengurus && !entry.paymentId"
-              type="button"
-              @click="$emit('deleteEntry', entry.id)"
-              class="w-8 h-8 rounded-xl bg-[#eaf0f7] text-slate-400 hover:text-red-600 shadow-[2px_2px_4px_#cad5e2,-2px_-2px_4px_#ffffff] active:shadow-[inset_1px_1px_2px_#cad5e2] flex items-center justify-center text-xs font-black transition-colors cursor-pointer"
-              title="Hapus entri kas ini"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
+              <!-- Nominal -->
+              <td class="py-3.5 px-4 whitespace-nowrap text-right font-black text-sm">
+                <span :class="entry.type === 'INCOME' ? 'text-[#007979]' : 'text-[#E37434]'">
+                  {{ entry.type === 'INCOME' ? '+' : '-' }} {{ formatRupiah(entry.amount) }}
+                </span>
+              </td>
+
+              <!-- Aksi -->
+              <td v-if="isPengurus" class="py-3.5 px-4 whitespace-nowrap text-center">
+                <button
+                  v-if="!entry.paymentId"
+                  type="button"
+                  @click="$emit('deleteEntry', entry.id)"
+                  class="w-7 h-7 mx-auto rounded-lg bg-[#eaf0f7] text-slate-400 hover:text-rose-600 shadow-[2px_2px_4px_#cad5e2,-2px_-2px_4px_#ffffff] active:shadow-[inset_1px_1px_2px_#cad5e2] flex items-center justify-center text-xs font-black transition-all cursor-pointer"
+                  title="Hapus entri kas ini"
+                >
+                  ✕
+                </button>
+                <span v-else class="text-[10px] text-slate-300 font-bold select-none" title="Terkunci otomatis dari sistem">-</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

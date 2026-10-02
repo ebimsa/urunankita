@@ -76,7 +76,7 @@ const handleRegister = async () => {
 const fillPreset = (type: 'RT' | 'WARGA') => {
   activeTab.value = 'LOGIN'
   if (type === 'RT') {
-    loginIdentifier.value = 'budi@eyuran.id'
+    loginIdentifier.value = 'budi@urunankita.id'
     loginPassword.value = 'password123'
   } else {
     loginIdentifier.value = '08198765432'
@@ -168,7 +168,7 @@ const fillPreset = (type: 'RT' | 'WARGA') => {
               type="text"
               autocomplete="username"
               required
-              placeholder="Contoh: budi@eyuran.id atau 08198765432"
+              placeholder="Contoh: budi@urunankita.id atau 08198765432"
               class="w-full px-4 py-3 rounded-2xl bg-[#eaf0f7] text-slate-800 text-xs sm:text-sm font-semibold shadow-[inset_2px_2px_5px_#cad5e2,inset_-2px_-2px_5px_#ffffff] border border-white/60 focus:ring-2 focus:ring-[#007979] focus:outline-none transition-all placeholder:text-slate-400"
             />
           </div>

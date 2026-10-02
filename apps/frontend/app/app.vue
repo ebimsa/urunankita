@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuth } from './composables/useAuth'
 import { useGroups } from './composables/useGroups'
 import { useNavigation } from './composables/useNavigation'
+import ToastContainer from './components/ToastContainer.vue'
 
 // Auth & Navigation State
 const { user, isAuthenticated, fetchMe, logout } = useAuth()
@@ -114,11 +115,11 @@ const handlePaySimulation = () => {
         <!-- Logo -->
         <a href="#" class="flex items-center space-x-2.5 sm:space-x-3 group">
           <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-[#f58342] to-[#ce6326] text-white flex items-center justify-center font-black text-lg sm:text-xl shadow-[3px_3px_8px_#cad5e2,-3px_-3px_8px_#ffffff] transition-transform duration-200 group-hover:scale-105">
-            e
+            u
           </div>
           <div>
             <span class="text-lg sm:text-2xl font-black tracking-tight text-slate-800 leading-none">
-              eYuran
+              urunankita
             </span>
             <p class="hidden xs:block text-[10px] sm:text-[11px] text-slate-500 font-semibold tracking-wide mt-0.5">Sistem Kas & Iuran Grup</p>
           </div>
@@ -1304,15 +1305,15 @@ const handlePaySimulation = () => {
         
         <div class="flex items-center space-x-3">
           <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-[#E37434] to-[#ce6326] text-white flex items-center justify-center font-black text-sm shadow-[3px_3px_7px_#cad5e2,-3px_-3px_7px_#ffffff]">
-            e
+            u
           </div>
           <div>
-            <span class="font-black text-base text-slate-800">eYuran</span>
+            <span class="font-black text-base text-slate-800">urunankita</span>
             <span class="text-slate-500 font-medium ml-2">— Platform Penagihan dan Kas Grup Mandiri</span>
           </div>
         </div>
 
-        <p class="text-slate-500 font-medium text-center sm:text-right">© 2026 eYuran. Seluruh hak cipta dilindungi.</p>
+        <p class="text-slate-500 font-medium text-center sm:text-right">© 2026 urunankita. Seluruh hak cipta dilindungi.</p>
       </div>
     </footer>
 
@@ -1323,6 +1324,9 @@ const handlePaySimulation = () => {
       @close="isAuthModalOpen = false"
       @success="handleAuthSuccess"
     />
+
+    <!-- Global Toast Notification Container -->
+    <ToastContainer />
   </div>
 </template>
 

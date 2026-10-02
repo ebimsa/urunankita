@@ -21,6 +21,7 @@ defineEmits<{
   (e: 'openVerify', bill: any): void
   (e: 'openAllBills'): void
   (e: 'goToLedger'): void
+  (e: 'viewReceipt', bill: any): void
 }>()
 </script>
 
@@ -118,12 +119,15 @@ defineEmits<{
               </div>
 
               <div class="flex-shrink-0">
-                <span
+                <button
                   v-if="b.status === 'PAID'"
-                  class="px-2.5 py-1 rounded-xl bg-[#24B1B1]/15 text-[#007979] font-black text-[10px] uppercase shadow-xs"
+                  type="button"
+                  @click="$emit('viewReceipt', b)"
+                  class="px-2.5 py-1 rounded-xl bg-[#24B1B1]/15 hover:bg-[#24B1B1]/25 text-[#007979] font-black text-[10px] uppercase shadow-xs transition-all flex items-center space-x-1 cursor-pointer"
+                  title="Lihat & cetak kwitansi resmi pembayaran iuran"
                 >
-                  Lunas
-                </span>
+                  <span>🧾 Kwitansi</span>
+                </button>
                 <span
                   v-else-if="b.status === 'PENDING_VERIFICATION'"
                   class="px-2.5 py-1 rounded-xl bg-[#FFE2AF] text-[#E37434] font-black text-[10px] uppercase shadow-xs whitespace-nowrap"

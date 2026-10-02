@@ -472,7 +472,7 @@ export class BillingService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      const updatedPayment = await tx.payment.update({
+      await tx.payment.update({
         where: { id: payment.id },
         data: {
           status: dto.status,

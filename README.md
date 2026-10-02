@@ -1,6 +1,6 @@
-# eYuran - Multi-tenant Community Billing & Bookkeeping Engine
+# urunankita - Multi-tenant Community Billing & Bookkeeping Engine
 
-eYuran adalah platform SaaS pencatatan, penagihan, dan transparansi iuran komunitas mandiri. Dirancang untuk menangani kelompok formal (perumahan, RT/RW, kost) maupun kelompok kasual (futsal, arisan, komunitas hobi).
+urunankita adalah platform SaaS pencatatan, penagihan, dan transparansi iuran komunitas mandiri. Dirancang untuk menangani kelompok formal (perumahan, RT/RW, kost) maupun kelompok kasual (futsal, arisan, komunitas hobi).
 
 ---
 
@@ -34,7 +34,7 @@ Sistem ini dibangun dengan arsitektur Monorepo menggunakan npm workspaces:
 ## Struktur Direktori
 
 ```text
-eYuran/
+urunankita/
 ├── apps/
 │   ├── backend/          # NestJS API & Prisma Schema
 │   │   ├── prisma/       # schema.prisma (PostgreSQL)
@@ -62,6 +62,11 @@ Salin konfigurasi environment di backend:
 cp apps/backend/.env.example apps/backend/.env
 ```
 
+*(Opsional)* Jika menggunakan Docker, jalankan PostgreSQL lokal:
+```bash
+docker compose up -d
+```
+
 Sesuaikan `DATABASE_URL` di `apps/backend/.env` dengan koneksi PostgreSQL Anda, lalu jalankan pembuatan client:
 ```bash
 npm run prisma:generate
@@ -70,6 +75,11 @@ npm run prisma:generate
 Untuk menjalankan migrasi ke database:
 ```bash
 npm run prisma:migrate
+```
+
+*(Opsional)* Mengisi data demo awal (komunitas percontohan, unit, tagihan, & akun demo):
+```bash
+npm run prisma:seed
 ```
 
 ### 3. Jalankan Aplikasi (Development)

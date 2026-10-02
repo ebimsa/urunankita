@@ -12,12 +12,35 @@ const props = defineProps<{
   memberActionLoading: string | null
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'goToDashboard'): void
   (e: 'approveMember', memberId: string): void
   (e: 'rejectMember', memberId: string): void
   (e: 'copyJoinCode', code: string): void
+  (e: 'leaveGroup'): void
+  (e: 'updateRole', memberId: string, newRole: 'ADMIN' | 'MEMBER'): void
+  (e: 'removeMember', memberId: string): void
 }>()
+
+const isOwner = computed(() => props.activeMembership?.role === 'OWNER')
+
+const handleToggleRole = (member: any) => {
+  const newRole = member.role === 'ADMIN' ? 'MEMBER' : 'ADMIN'
+  const roleName = newRole === 'ADMIN' ? 'Pengurus / Bendahara' : 'Warga Biasa'
+  const confirmed = confirm(
+    `Ubah peran "${member.user?.fullName}" menjadi ${roleName}?`
+  )
+  if (!confirmed) return
+  emit('updateRole', member.id, newRole)
+}
+
+const handleRemoveMember = (member: any) => {
+  const confirmed = confirm(
+    `Yakin ingin mengeluarkan "${member.user?.fullName}" dari grup komunitas?`
+  )
+  if (!confirmed) return
+  emit('removeMember', member.id)
+}
 
 // Internal reactive search & filter
 const memberSearchQuery = ref('')
@@ -175,9 +198,9 @@ const getMemberRoleLabel = (role: string) => {
 
     <!-- Members List Area Card -->
     <div class="rounded-3xl bg-[#eaf0f7] shadow-[8px_8px_18px_#cad5e2,-8px_-8px_18px_#ffffff] border border-white/80 p-5 sm:p-6 space-y-3">
-      <!-- Loading State -->
-      <div v-if="membersLoading" class="p-12 text-center text-slate-500 font-medium text-xs">
-        Memuat daftar anggota...
+      <!-- Loading State Skeleton -->
+      <div v-if="membersLoading" class="py-4">
+        <SkeletonLoader variant="table" :lines="4" />
       </div>
 
       <!-- Empty State -->
@@ -272,9 +295,54 @@ const getMemberRoleLabel = (role: string) => {
 
             <!-- If status is APPROVED -->
             <template v-else>
-              <span class="px-3 py-1 rounded-xl bg-[#007979]/10 text-[#007979] text-[11px] font-black uppercase">
+              <span class="px-2.5 py-1 rounded-xl bg-[#007979]/10 text-[#007979] text-[10px] font-black uppercase">
                 Aktif
               </span>
+
+              <!-- Aksi Khusus OWNER: Promosikan / Turunkan Peran Pengurus -->
+              <button
+                v-if="isOwner && m.role !== 'OWNER' && m.user?.id !== user?.id"
+                type="button"
+                @click="handleToggleRole(m)"
+                class="px-2.5 py-1 rounded-xl text-[10px] font-black transition-all cursor-pointer flex items-center space-x-1"
+                :class="m.role === 'ADMIN'
+                  ? 'bg-[#eaf0f7] text-slate-600 hover:text-slate-800 shadow-[2px_2px_4px_#cad5e2,-2px_-2px_4px_#ffffff] active:shadow-[inset_1px_1px_2px_#cad5e2]'
+                  : 'bg-[#007979]/15 text-[#007979] hover:bg-[#007979]/25 shadow-[2px_2px_4px_#cad5e2,-2px_-2px_4px_#ffffff] active:shadow-[inset_1px_1px_2px_#cad5e2]'"
+                :title="m.role === 'ADMIN' ? 'Turunkan menjadi Warga Biasa' : 'Jadikan Pengurus / Bendahara'"
+              >
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>{{ m.role === 'ADMIN' ? 'Jadikan Warga' : 'Jadikan Pengurus' }}</span>
+              </button>
+
+              <!-- Aksi Khusus PENGURUS: Keluarkan Anggota dari Komunitas -->
+              <button
+                v-if="isPengurus && m.role !== 'OWNER' && m.user?.id !== user?.id && !(activeMembership?.role === 'ADMIN' && m.role === 'ADMIN')"
+                type="button"
+                @click="handleRemoveMember(m)"
+                class="px-2.5 py-1 rounded-xl bg-[#eaf0f7] text-rose-500 hover:text-rose-700 hover:bg-rose-50 text-[10px] font-bold shadow-[2px_2px_4px_#cad5e2,-2px_-2px_4px_#ffffff] active:shadow-[inset_1px_1px_2px_#cad5e2] transition-all cursor-pointer flex items-center space-x-1"
+                title="Keluarkan warga ini dari grup"
+              >
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
+                </svg>
+                <span>Keluarkan</span>
+              </button>
+
+              <!-- Tombol Keluar Grup khusus untuk user yang sedang login (kecuali OWNER) -->
+              <button
+                v-if="m.user?.id === user?.id && m.role !== 'OWNER'"
+                type="button"
+                @click="$emit('leaveGroup')"
+                class="px-2.5 py-1 rounded-xl bg-[#eaf0f7] text-rose-500 hover:text-rose-700 text-[10px] font-bold shadow-[2px_2px_5px_#cad5e2,-2px_-2px_5px_#ffffff] active:shadow-[inset_1px_1px_2px_#cad5e2] transition-all cursor-pointer flex items-center space-x-1"
+                title="Keluar dari grup komunitas ini"
+              >
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span>Keluar Grup</span>
+              </button>
             </template>
           </div>
         </div>

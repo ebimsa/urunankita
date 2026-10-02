@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { MemberRole } from '@prisma/client';
@@ -89,6 +90,16 @@ export class GroupsController {
     return this.groupsService.getUnits(groupId);
   }
 
+  @Delete(':groupId/units/:unitId')
+  @UseGuards(GroupRolesGuard)
+  @GroupRoles(MemberRole.OWNER, MemberRole.ADMIN)
+  async deleteUnit(
+    @Param('groupId') groupId: string,
+    @Param('unitId') unitId: string,
+  ) {
+    return this.groupsService.deleteUnit(groupId, unitId);
+  }
+
   // --- ANGGOTA & PERSETUJUAN ---
   @Get(':groupId/members')
   async getMembers(@Param('groupId') groupId: string) {
@@ -141,5 +152,26 @@ export class GroupsController {
     @Param('memberId') memberId: string,
   ) {
     return this.groupsService.removeMember(groupId, memberId);
+  }
+
+  @Delete(':groupId/leave')
+  @HttpCode(HttpStatus.OK)
+  async leaveGroup(
+    @Param('groupId') groupId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.groupsService.leaveGroup(groupId, userId);
+  }
+
+  // --- AUDIT TRAIL KOMUNITAS ---
+  @Get(':groupId/audit-logs')
+  @UseGuards(GroupRolesGuard)
+  @GroupRoles(MemberRole.OWNER, MemberRole.ADMIN)
+  async getAuditLogs(
+    @Param('groupId') groupId: string,
+    @Query('limit') limit?: string,
+  ) {
+    const take = limit ? parseInt(limit, 10) || 50 : 50;
+    return this.groupsService.getAuditLogs(groupId, take);
   }
 }

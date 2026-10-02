@@ -413,6 +413,35 @@ export class GroupsService {
     });
   }
 
+  async deleteUnit(groupId: string, unitId: string) {
+    const unit = await this.prisma.groupUnit.findFirst({
+      where: { id: unitId, groupId },
+      include: {
+        occupants: {
+          where: { isActive: true },
+        },
+      },
+    });
+
+    if (!unit) {
+      throw new NotFoundException('Unit tidak ditemukan');
+    }
+
+    if (unit.occupants && unit.occupants.length > 0) {
+      throw new ConflictException(
+        `Unit "${unit.name}" masih memiliki ${unit.occupants.length} warga/penghuni aktif. Pindahkan atau keluarkan penghuni terlebih dahulu sebelum menghapus unit.`,
+      );
+    }
+
+    await this.prisma.groupUnit.delete({
+      where: { id: unitId },
+    });
+
+    return {
+      message: `Unit "${unit.name}" berhasil dihapus`,
+    };
+  }
+
   // --- MANAJEMEN ANGGOTA & PERSETUJUAN ---
   async getMembers(groupId: string) {
     return this.prisma.groupMember.findMany({
@@ -562,4 +591,54 @@ export class GroupsService {
       message: 'Anggota berhasil dikeluarkan dari grup',
     };
   }
+
+  async leaveGroup(groupId: string, userId: string) {
+    const membership = await this.prisma.groupMember.findUnique({
+      where: {
+        groupId_userId: {
+          groupId,
+          userId,
+        },
+      },
+    });
+
+    if (!membership) {
+      throw new NotFoundException('Keanggotaan tidak ditemukan');
+    }
+
+    if (membership.role === MemberRole.OWNER) {
+      throw new BadRequestException(
+        'Pembuat grup (OWNER) tidak dapat keluar dari grup. Hapus grup atau alihkan kepemilikan terlebih dahulu.',
+      );
+    }
+
+    await this.prisma.groupMember.delete({
+      where: { id: membership.id },
+    });
+
+    return { message: 'Kamu telah keluar dari grup.' };
+  }
+
+  // =========================================================================
+  // AUDIT TRAIL KOMUNITAS
+  // =========================================================================
+
+  async getAuditLogs(groupId: string, limit = 50) {
+    return this.prisma.auditLog.findMany({
+      where: { groupId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            phone: true,
+            role: true,
+          },
+        },
+      },
+      orderBy: { timestamp: 'desc' },
+      take: limit,
+    });
+  }
 }
+
