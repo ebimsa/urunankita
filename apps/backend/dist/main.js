@@ -45,7 +45,7 @@ server.use((req, res, next) => {
 export default async function handler(req, res) {
     if (!isReady) {
         if (!initPromise) {
-            initPromise = bootstrap().then(() => { });
+            initPromise = bootstrap();
         }
         await initPromise;
     }
@@ -56,7 +56,11 @@ export default async function handler(req, res) {
         server(req, res);
     });
 }
-if (!process.env.VERCEL) {
-    await bootstrap();
+export { server, bootstrap };
+const port = process.env.PORT || (!process.env.VERCEL ? 3001 : null);
+if (port) {
+    const app = await bootstrap();
+    await app.listen(port);
+    console.log(`🚀 urunankita Backend berjalan di port ${port}`);
 }
 //# sourceMappingURL=main.js.map

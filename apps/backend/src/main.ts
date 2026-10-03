@@ -10,7 +10,7 @@ server.use(express.json({ limit: '10mb' }));
 server.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 let isReady = false;
-let initPromise: Promise<void> | null = null;
+let initPromise: Promise<any> | null = null;
 
 async function bootstrap() {
   // 1. Validasi variabel environment esensial saat startup
@@ -63,7 +63,7 @@ server.use((req, res, next) => {
 export default async function handler(req: any, res: any) {
   if (!isReady) {
     if (!initPromise) {
-      initPromise = bootstrap().then(() => {});
+      initPromise = bootstrap();
     }
     await initPromise;
   }
@@ -77,9 +77,14 @@ export default async function handler(req: any, res: any) {
   });
 }
 
-// Eksekusi otomatis jika berjalan di lokal / server mandiri
-if (!process.env.VERCEL) {
-  await bootstrap();
+export { server, bootstrap };
+
+// Jika berjalan dengan PORT (Vercel Services mode server atau lokal)
+const port = process.env.PORT || (!process.env.VERCEL ? 3001 : null);
+if (port) {
+  const app = await bootstrap();
+  await app.listen(port);
+  console.log(`🚀 urunankita Backend berjalan di port ${port}`);
 }
 
 
