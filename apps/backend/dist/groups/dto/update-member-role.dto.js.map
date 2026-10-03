@@ -1,0 +1,1 @@
+{"version":3,"file":"update-member-role.dto.js","sourceRoot":"","sources":["../../../src/groups/dto/update-member-role.dto.ts"],"names":[],"mappings":";;;;;;;;;AAAA,OAAO,EAAE,MAAM,EAAE,MAAM,iBAAiB,CAAC;AACzC,OAAO,EAAE,UAAU,EAAE,MAAM,gBAAgB,CAAC;AAE5C,MAAM,OAAO,mBAAmB;IAE9B,IAAI,CAAa;CAClB;AADC;IADC,MAAM,CAAC,UAAU,EAAE,EAAE,OAAO,EAAE,+BAA+B,EAAE,CAAC;;iDAChD"}
