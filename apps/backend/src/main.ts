@@ -51,6 +51,14 @@ async function bootstrap() {
   return app;
 }
 
+// Middleware untuk menormalisasi rute (baik Vercel meneruskan /api/xxx maupun /xxx)
+server.use((req, res, next) => {
+  if (!req.url.startsWith('/api')) {
+    req.url = '/api' + (req.url === '/' ? '' : req.url);
+  }
+  next();
+});
+
 // Handler untuk Vercel Serverless Function
 export default async function handler(req: any, res: any) {
   if (!isReady) {
@@ -59,7 +67,14 @@ export default async function handler(req: any, res: any) {
     }
     await initPromise;
   }
-  server(req, res);
+
+  // Kembalikan Promise yang menunggu sampai Express selesai mengirimkan respon ke klien
+  return new Promise<void>((resolve, reject) => {
+    res.on('finish', () => resolve());
+    res.on('close', () => resolve());
+    res.on('error', (err: any) => reject(err));
+    server(req, res);
+  });
 }
 
 // Eksekusi otomatis jika berjalan di lokal / server mandiri
