@@ -4,7 +4,11 @@ import { PrismaClient } from '@prisma/client';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
-    await this.$connect();
+    try {
+      await this.$connect();
+    } catch (err: any) {
+      console.error('⚠️ Gagal terhubung ke database saat startup:', err?.message || err);
+    }
   }
 
   async onModuleDestroy() {
