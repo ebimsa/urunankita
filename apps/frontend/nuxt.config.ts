@@ -3,8 +3,11 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   modules: ['@nuxtjs/tailwindcss'],
   runtimeConfig: {
+    // Private (server-only SSR) - diisi otomatis via Vercel service binding BACKEND_URL
+    backendUrl: process.env.BACKEND_URL || 'http://localhost:3001',
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001',
+      // Public (browser client) - default ke /api (same-origin Vercel rewrite) atau port dev lokal
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:3001/api'),
     },
   },
   app: {

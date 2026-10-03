@@ -15,7 +15,9 @@ export interface AuthResponse {
 
 export const useAuth = () => {
   const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase || 'http://localhost:3001'
+  const apiBase = (import.meta.server && config.backendUrl)
+    ? `${config.backendUrl.replace(/\/$/, '')}/api`
+    : (config.public.apiBase || '/api').replace(/\/$/, '')
 
   const token = useCookie<string | null>('urunankita_jwt_token', {
     maxAge: 60 * 60 * 24 * 7, // 7 hari

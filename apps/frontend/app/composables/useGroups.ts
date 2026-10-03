@@ -82,7 +82,9 @@ export interface PaymentOptionResponse {
 
 export const useGroups = () => {
   const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase || 'http://localhost:3001'
+  const apiBase = (import.meta.server && config.backendUrl)
+    ? `${config.backendUrl.replace(/\/$/, '')}/api`
+    : (config.public.apiBase || '/api').replace(/\/$/, '')
   const { token } = useAuth()
 
   const myGroups = useState<GroupMembership[]>('urunankita_my_groups', () => [])
